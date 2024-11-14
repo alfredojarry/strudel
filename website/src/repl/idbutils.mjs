@@ -23,12 +23,13 @@ function clearIDB() {
     });
 }
 
+// get sample duration
+
 async function getBlobDuration(blob) {
   const tempVideoEl = document.createElement('video')
-
   const durationP = new Promise((resolve, reject) => {
     tempVideoEl.addEventListener('loadedmetadata', () => {
-      // Chrome bug: https://bugs.chromium.org/p/chromium/issues/detail?id=642012
+      // chrome bug: https://bugs.chromium.org/p/chromium/issues/detail?id=642012
       if(tempVideoEl.duration === Infinity) {
         tempVideoEl.currentTime = Number.MAX_SAFE_INTEGER
         tempVideoEl.ontimeupdate = () => {
@@ -37,19 +38,19 @@ async function getBlobDuration(blob) {
           tempVideoEl.currentTime = 0
         }
       }
-      // Normal behavior
+      // normal behavior
       else
         resolve(tempVideoEl.duration)
     })
     tempVideoEl.onerror = (event) => reject(event.target.error)
   })
-
   tempVideoEl.src = typeof blob === 'string' || blob instanceof String
     ? blob
     : window.URL.createObjectURL(blob)
-
   return durationP
 }
+
+// queries the DB, and registers the sounds so they can be played
 
 export function registerSamplesFromDB(config = userSamplesDBConfig, onComplete = () => {}) {
   openDB(config, (objectStore) => {
@@ -123,78 +124,6 @@ export function registerSamplesFromDB(config = userSamplesDBConfig, onComplete =
     };
   });
 }
-
-
-// queries the DB, and registers the sounds so they can be played
-/*export function registerSamplesFromDB(config = userSamplesDBConfig, onComplete = () => {}) {
-  openDB(config, (objectStore) => {
-    const query = objectStore.getAll();
-    query.onerror = (e) => {
-      logger('User Samples failed to load ', 'error');
-      onComplete();
-      console.error(e?.target?.error);
-    };
-
-    query.onsuccess = (event) => {
-      const soundFiles = event.target.result;
-      if (!soundFiles?.length) {
-        return;
-      }
-      const sounds = new Map();
-
-      Promise.all(
-        [...soundFiles]
-          .sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' }))
-          .map((soundFile, i) => {
-            const title = soundFile.title;
-            if (!isAudioFile(title)) {
-              return;
-            }
-            const splitRelativePath = soundFile.id.split('/');
-            let parentDirectory =
-              //fallback to file name before period and seperator if no parent directory
-              splitRelativePath[splitRelativePath.length - 2] ?? soundFile.id.split(/\W+/)[0] ?? 'user';
-            const blob = soundFile.blob;
-
-            // Files used to be uploaded as base64 strings, After Jan 1 2025 this check can be safely deleted
-            if (typeof blob === 'string') {
-              const soundPaths = sounds.get(parentDirectory) ?? new Set();
-              soundPaths.add(blob);
-              sounds.set(parentDirectory, soundPaths);
-              return;
-            }
-
-            return blobToDataUrl(blob).then((soundPath) => {
-              const soundPaths = sounds.get(parentDirectory) ?? new Set();
-              soundPaths.add(soundPath);
-              sounds.set(parentDirectory, soundPaths);
-              return;
-            });
-          }),
-      )
-        .then(() => {
-          sounds.forEach((soundPaths, key) => {
-            const value = Array.from(soundPaths);
-
-            registerSound(key, (t, hapValue, onended) => onTriggerSample(t, hapValue, onended, value), {
-              type: 'sample',
-              samples: value,
-              baseUrl: undefined,
-              prebake: false,
-              tag: undefined,
-            });
-          });
-
-          logger('imported sounds registered!', 'success');
-          onComplete();
-        })
-        .catch((error) => {
-          logger('Something went wrong while registering saved samples from the index db', 'error');
-          console.error(error);
-        });
-    };
-  });
-}*/
 
 async function blobToDataUrl(blob) {
   return new Promise((resolve) => {
