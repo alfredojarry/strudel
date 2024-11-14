@@ -23,7 +23,7 @@ function clearIDB() {
     });
 }
 
-function getBlobDuration(blob) {
+async function getBlobDuration(blob) {
   const tempVideoEl = document.createElement('video')
 
   const durationP = new Promise((resolve, reject) => {
