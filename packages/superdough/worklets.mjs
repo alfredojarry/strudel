@@ -761,7 +761,7 @@ class PulseOscillatorProcessor extends AudioWorkletProcessor {
 }
 
 registerProcessor('pulse-oscillator', PulseOscillatorProcessor);
-=======
+
 class RecordingProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
