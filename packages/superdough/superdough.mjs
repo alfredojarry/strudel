@@ -584,8 +584,8 @@ export const superdough = async (value, t, hapDuration) => {
     s = `${bank}_${s}`;
     value.s = s;
   }
-  if (value.n && !getSound(s)) {
-    if (rec) {
+  if (value.n) {
+    if (rec && !getSound(`${rec}_${value.n}`)) {
       rec = `${rec}_${value.n}`;
       value.rec = rec;
       value.n = 0;
