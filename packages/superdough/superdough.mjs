@@ -584,7 +584,7 @@ export const superdough = async (value, t, hapDuration) => {
     s = `${bank}_${s}`;
     value.s = s;
   }
-  if (value.n) {
+  if (value.n !== undefined) {
     if (rec) {
       rec = `${rec}_${value.n}`;
       value.rec = rec;
