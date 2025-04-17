@@ -584,6 +584,7 @@ export const superdough = async (value, t, hapDuration) => {
     s = `${bank}_${s}`;
     value.s = s;
   }
+  console.log(value)
   if (value.n && !getSound(s)) {
     if (rec) {
       rec = rec + '_' + value.n;
