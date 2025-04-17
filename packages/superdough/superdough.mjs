@@ -586,12 +586,12 @@ export const superdough = async (value, t, hapDuration) => {
   }
   if (value.n && !getSound(s)) {
     if (rec) {
-      rec = rec + '_' + value.n;
+      rec = `${rec}_${value.n}`;
       value.rec = rec;
       value.n = 0;
     }
-    else {
-      s = s + '_' + value.n;
+    else if (getSound(`${s}_${value.n}`)) {
+      s = `${s}_${value.n}`;
       value.s = s;
       value.n = 0;
     }
