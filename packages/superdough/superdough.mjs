@@ -8,7 +8,7 @@ import './feedbackdelay.mjs';
 import './reverb.mjs';
 import './vowel.mjs';
 import { clamp, nanFallback, _mod } from './util.mjs';
-import workletsUrl from './worklets.mjs?worker&url';
+import workletsUrl from './worklets.mjs?audioworklet';
 import { createFilter, gainNode, getCompressor, getWorklet } from './helpers.mjs';
 import { map } from 'nanostores';
 import { logger } from './logger.mjs';
@@ -18,6 +18,7 @@ export const DEFAULT_MAX_POLYPHONY = 128;
 const DEFAULT_AUDIO_DEVICE_NAME = 'System Standard';
 
 let maxPolyphony = DEFAULT_MAX_POLYPHONY;
+
 export function setMaxPolyphony(polyphony) {
   maxPolyphony = parseInt(polyphony) ?? DEFAULT_MAX_POLYPHONY;
 }
@@ -26,6 +27,16 @@ export const soundMap = map();
 export function registerSound(key, onTrigger, data = {}) {
   key = key.toLowerCase().replace(/\s+/g, '_');
   soundMap.setKey(key, { onTrigger, data });
+}
+
+let gainCurveFunc = (val) => val;
+
+export function applyGainCurve(val) {
+  return gainCurveFunc(val);
+}
+
+export function setGainCurve(newGainCurveFunc) {
+  gainCurveFunc = newGainCurveFunc;
 }
 
 function aliasBankMap(aliasMap) {
@@ -560,7 +571,13 @@ export const superdough = async (value, t, hapDuration) => {
     compressorRelease,
   } = value;
 
-  gain = nanFallback(gain, 1);
+  gain = applyGainCurve(nanFallback(gain, 1));
+  postgain = applyGainCurve(postgain);
+  shapevol = applyGainCurve(shapevol);
+  distortvol = applyGainCurve(distortvol);
+  delay = applyGainCurve(delay);
+  velocity = applyGainCurve(velocity);
+  gain *= velocity; // velocity currently only multiplies with gain. it might do other things in the future
 
   const chainID = Math.round(Math.random() * 1000000);
 
@@ -577,7 +594,7 @@ export const superdough = async (value, t, hapDuration) => {
 
   //music programs/audio gear usually increments inputs/outputs from 1, so imitate that behavior
   channels = (Array.isArray(channels) ? channels : [channels]).map((ch) => ch - 1);
-  gain *= velocity; // velocity currently only multiplies with gain. it might do other things in the future
+
   let audioNodes = [];
 
   if (bank && s) {
